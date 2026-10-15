@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AI Study Buddy</title>
+<style>
+:root{--bg:#f7f5f0;--card:#fff;--ink:#22303f;--mute:#5b6770;--line:#e3dfd6;--navy:#1f3a5f;--teal:#2a9d8f;--ok:#1d7a4a;--bad:#b3392f;color-scheme:light;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#141b24;--card:#1d2733;--ink:#e6edf3;--mute:#9aa8b5;--line:#2d3a48;--navy:#9cc3f0;--teal:#4fc3b3;--ok:#5fd69a;--bad:#ff8a80;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#141b24;--card:#1d2733;--ink:#e6edf3;--mute:#9aa8b5;--line:#2d3a48;--navy:#9cc3f0;--teal:#4fc3b3;--ok:#5fd69a;--bad:#ff8a80;color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:720px;margin:0 auto;padding:20px 16px 40px}
+h1{margin:0 0 4px;font-size:26px;color:var(--navy)}
+.sub{margin:0 0 18px;color:var(--mute)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:14px}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+label{font-size:13px;color:var(--mute);display:block;margin-bottom:4px}
+select,textarea,input[type=file]{width:100%;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:9px}
+.row>div{flex:1;min-width:140px}
+textarea{min-height:90px;resize:vertical}
+button{font:inherit;border:0;border-radius:8px;padding:10px 16px;cursor:pointer;background:var(--teal);color:#fff;font-weight:600}
+button.alt{background:transparent;color:var(--navy);border:1px solid var(--navy)}
+button.sm{padding:7px 12px;font-size:14px}
+button:disabled{opacity:.5;cursor:default}
+#out{white-space:pre-wrap;line-height:1.55}
+.q{margin:14px 0}.q b{display:block;margin-bottom:6px}
+.opt{display:block;width:100%;text-align:left;margin:5px 0;background:var(--bg);color:var(--ink);border:1px solid var(--line);font-weight:400}
+.opt.ok{border-color:var(--ok);color:var(--ok)}.opt.bad{border-color:var(--bad);color:var(--bad)}
+.why{font-size:14px;color:var(--mute);margin-top:4px}
+.stat{display:flex;gap:18px;flex-wrap:wrap;color:var(--mute);font-size:14px}.stat b{color:var(--navy);font-size:18px}
+.msg{color:var(--mute);font-size:14px}
+.hist div{padding:6px 0;border-bottom:1px solid var(--line);font-size:14px;cursor:pointer}
+.hist div:last-child{border-bottom:0}
+#acts{margin-top:12px}
+nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--card);border-bottom:1px solid var(--line)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--card);z-index:21}
+.bar{max-width:720px;margin:0 auto;display:flex;align-items:center;gap:6px;padding:8px 12px;overflow-x:auto}
+.brand{font-weight:700;color:var(--navy);margin-right:auto;white-space:nowrap}
+nav button{background:transparent;color:var(--mute);padding:8px 12px;font-weight:600;white-space:nowrap}
+nav button.on{color:#fff;background:var(--teal)}
+.about li{margin:6px 0;line-height:1.5}
+</style>
+</head>
+<body>
+<nav><div class="bar"><span class="brand">📚 AI Study Buddy</span><button id="m-ask" class="on">Ask</button><button id="m-prog">Progress</button><button id="m-about">About</button></div></nav>
+<main>
+<div class="tab" id="t-ask">
+<h1>AI Study Buddy</h1>
+<p class="sub">Ask a doubt by text or photo, get step-by-step help, then check your understanding.</p>
+
+<div class="card">
+  <div class="row">
+    <div><label for="grade">Grade</label><select id="grade"><option>8</option><option>9</option><option>10</option><option>11</option><option>12</option></select></div>
+    <div><label for="subj">Subject</label><select id="subj"><option>Maths</option><option>Science</option><option>English</option><option>Social Studies</option><option>Computer Science</option></select></div>
+    <div><label for="lang">Explain in</label><select id="lang"><option>English</option><option>Hindi</option><option>Marathi</option><option>Tamil</option><option>Bengali</option></select></div>
+  </div>
+  <label for="doubt">Your doubt</label>
+  <textarea id="doubt" placeholder="e.g. Why does a negative times a negative give a positive?"></textarea>
+  <div style="margin-top:10px"><label for="pic">Or add a photo of the question</label><input type="file" id="pic" accept="image/*"></div>
+  <div class="row" style="margin:12px 0 0">
+    <button id="go">Explain step by step</button>
+  </div>
+  <p id="note" class="msg"></p>
+</div>
+
+<div class="card" id="ans" hidden>
+  <div id="out"></div>
+  <div id="acts" class="row">
+    <button class="alt sm" id="simpler" disabled>Explain simpler</button>
+    <button class="alt sm" id="more" disabled>Another example</button>
+    <button class="alt sm" id="speak" disabled>Read aloud</button>
+    <button class="sm" id="quiz" disabled>Quiz me on this</button>
+  </div>
+</div>
+<div class="card" id="qz" hidden><div id="qbody"></div></div>
+
+</div>
+<div class="tab" id="t-prog" hidden>
+<div class="card stat">
+  <div><b id="s1">0</b><br>doubts asked</div><div><b id="s2">0</b><br>quiz right</div><div><b id="s3">0</b><br>quiz total</div><div><b id="s4">0</b><br>% score</div>
+</div>
+<div class="card"><b>Recent doubts</b> <span class="msg">(tap one to reuse it)</span><div id="hist" class="hist"></div>
+  <p><button class="alt sm" id="reset">Reset progress</button></p></div>
+</div>
+<div class="tab" id="t-about" hidden>
+<h1>About</h1>
+<div class="card about"><b>How it works</b>
+<ol><li>Pick your grade, subject and language on the Ask tab.</li><li>Type your doubt or add a photo of the question, then get a step-by-step explanation.</li><li>Use Explain simpler, Another example or Read aloud if you need more help.</li><li>Take the quiz, then check your score on the Progress tab.</li></ol></div>
+<div class="card about"><b>Good to know</b>
+<ul><li>Your progress is saved only in this browser.</li><li>AI explanations can sometimes be wrong, so check important answers with your teacher or textbook.</li><li>This is a student project prototype built for IBM SkillsBuild.</li></ul></div>
+</div>
+</main>
+
+<script>
+(function(){
+  var $=function(i){return document.getElementById(i)};
+  var st={d:0,r:0,t:0,h:[]}, sample=null, last="", lastQ="";
+  try{var sv=JSON.parse(localStorage.getItem("asb")||"null");if(sv&&typeof sv.d==="number")st=Object.assign(st,sv)}catch(e){}
+  var voices={English:"en-IN",Hindi:"hi-IN",Marathi:"mr-IN",Tamil:"ta-IN",Bengali:"bn-IN"};
+
+  function stats(){
+    $("s1").textContent=st.d;$("s2").textContent=st.r;$("s3").textContent=st.t;
+    $("s4").textContent=st.t?Math.round(100*st.r/st.t):0;
+    try{localStorage.setItem("asb",JSON.stringify(st))}catch(e){}
+    var h=$("hist");h.textContent="";
+    if(!st.h.length){h.innerHTML='<div class="msg" style="cursor:default">Nothing yet.</div>'}
+    st.h.slice().reverse().forEach(function(x){var d=document.createElement("div");d.textContent=x;d.onclick=function(){$("doubt").value=x;show("ask")};h.appendChild(d)});
+  }
+  function ctx(){return "Grade "+$("grade").value+" "+$("subj").value+" student. Language: "+$("lang").value+"."}
+  function busy(b){["go","simpler","more","quiz"].forEach(function(i){$(i).disabled=b||(i!=="go"&&!last)});$("speak").disabled=!last}
+  stats();
+
+  if(window.claude&&claude.use){
+    claude.use("sample").then(function(s){
+      sample=s;
+      if(!s){$("note").textContent="AI help is not available in this view, so the buttons are off.";$("go").disabled=true;return}
+      if(s.limits){s.limits().then(function(l){if(!l||!l.images)$("pic").disabled=true}).catch(function(){$("pic").disabled=true})}
+    }).catch(function(){$("go").disabled=true});
+  } else {$("note").textContent="Open this page in Claude to use AI help.";$("go").disabled=true}
+
+  async function ask(mode){
+    var q=$("doubt").value.trim(), f=$("pic").files&&$("pic").files[0];
+    if(mode==="" && !q && !f) return;
+    if(!sample) return;
+    var p="You are a patient, friendly school tutor. "+ctx()+" ";
+    if(mode===""){
+      p+="Explain the student's doubt in simple words in that language, in 3 to 6 numbered steps, teach the method, use one everyday example, and end with a one-line summary. Keep it under 220 words."+(f?" The question is in the attached photo.":"")+"\n\nStudent doubt: "+(q||"(see photo)");
+    } else {
+      p+=(mode==="simpler"?"Explain this again much more simply, as if to a younger student, using short sentences. ":"Give one new real-life example for this concept, then a one-line takeaway. ")+"Keep it under 150 words.\n\nOriginal doubt: "+lastQ+"\nEarlier explanation:\n"+last;
+    }
+    busy(true);$("qz").hidden=true;$("ans").hidden=false;$("out").textContent="Thinking...";
+    try{
+      var opts={modelTier:"quick",cache:false,onText:function(e){$("out").textContent=e.text}};
+      if(mode===""&&f)opts.images=[f];
+      var r=await sample(p,opts);
+      last=r.text;$("out").textContent=r.text;
+      if(mode===""){lastQ=q||"(photo question)";st.d++;st.h.push(lastQ.slice(0,80));st.h=st.h.slice(-8);stats()}
+    }catch(e){$("out").textContent=e&&e.code==="rate_limited"?"Too many requests. Please wait a moment and try again.":"Could not get an answer right now. Please try again."}
+    busy(false);
+  }
+  $("go").onclick=function(){ask("")};
+  $("simpler").onclick=function(){ask("simpler")};
+  $("more").onclick=function(){ask("example")};
+
+  $("speak").onclick=function(){
+    try{
+      var ss=window.speechSynthesis;if(!ss||!last)return;
+      if(ss.speaking){ss.cancel();return}
+      var u=new SpeechSynthesisUtterance(last);u.lang=voices[$("lang").value]||"en-IN";ss.speak(u);
+    }catch(e){$("note").textContent="Read aloud is not supported on this device."}
+  };
+
+  $("quiz").onclick=async function(){
+    if(!last||!sample) return;
+    busy(true);$("qz").hidden=false;$("qbody").textContent="Making your quiz...";
+    try{
+      var qs=await sample.json("Create 3 multiple-choice questions to test understanding of this explanation. "+ctx()+" Write in that language. Return ONLY a JSON array of objects with keys q (string), options (array of 4 strings), answer (index 0-3), why (one short sentence).\n\nExplanation:\n"+last,{modelTier:"quick",cache:false});
+      render(qs);
+    }catch(e){$("qbody").textContent="Could not make a quiz right now. Please try again."}
+    busy(false);
+  };
+
+  function render(qs){
+    var box=$("qbody");box.textContent="";
+    qs.slice(0,3).forEach(function(item,qi){
+      var w=document.createElement("div");w.className="q";
+      var t=document.createElement("b");t.textContent=(qi+1)+". "+item.q;w.appendChild(t);
+      var why=document.createElement("div");why.className="why";why.hidden=true;why.textContent=item.why||"";
+      var done=false;
+      item.options.forEach(function(o,oi){
+        var b=document.createElement("button");b.className="opt";b.textContent=o;
+        b.onclick=function(){
+          if(done)return;done=true;st.t++;
+          if(oi===item.answer){st.r++;b.classList.add("ok")}else{b.classList.add("bad");w.querySelectorAll(".opt")[item.answer].classList.add("ok")}
+          why.hidden=false;stats();
+        };
+        w.appendChild(b);
+      });
+      w.appendChild(why);box.appendChild(w);
+    });
+  }
+
+  $("reset").onclick=function(){st={d:0,r:0,t:0,h:[]};stats()};
+  var tabs=["ask","prog","about"];
+  function show(n){tabs.forEach(function(t){$("t-"+t).hidden=t!==n;$("m-"+t).classList.toggle("on",t===n)});window.scrollTo(0,0)}
+  tabs.forEach(function(t){$("m-"+t).onclick=function(){show(t)}});
+})();
+</script>
+</body>
+</html>
